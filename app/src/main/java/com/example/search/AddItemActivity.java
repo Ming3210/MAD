@@ -1,8 +1,6 @@
 package com.example.search;
 
-import android.content.Context;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -38,7 +36,7 @@ public class AddItemActivity extends AppCompatActivity {
         int id = (int) (System.currentTimeMillis() / 1000);
         SearchItem newItem = new SearchItem(id, title, description);
 
-        boolean saved = FileUtils.saveItem(this, newItem);
+        boolean saved = SearchItemDatabaseHelper.saveItem(this, newItem);
         if (saved) {
             Toast.makeText(this, "Đã lưu thành công", Toast.LENGTH_SHORT).show();
             finish(); // Quay lại MainActivity

@@ -31,6 +31,8 @@ public class MainActivity extends AppCompatActivity implements SearchItemClickLi
     private List<SearchItem> allItems = new ArrayList<>();
     private List<SearchItem> filteredItems = new ArrayList<>();
 
+    private SearchItemDatabaseHelper dbHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,21 +44,22 @@ public class MainActivity extends AppCompatActivity implements SearchItemClickLi
         resultsCountTextView = findViewById(R.id.resultsCountTextView);
         addButton = findViewById(R.id.addButton);
 
+        dbHelper = new SearchItemDatabaseHelper(this);
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         searchAdapter = new SearchAdapter(filteredItems);
         searchAdapter.setOnItemClickListener(this);
         recyclerView.setAdapter(searchAdapter);
 
-        allItems = FileUtils.getAllSavedItems(this); // ✅ Load from storage
-        performSearch(""); // Display all saved items
+        allItems = dbHelper.getAllSavedItems(this);
+        performSearch("");
 
         searchEditText.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
             @Override
             public void afterTextChanged(Editable s) {
-                String searchTerm = s.toString().trim().toLowerCase();
-                performSearch(searchTerm);
+                performSearch(s.toString().trim().toLowerCase());
             }
         });
 
@@ -69,10 +72,9 @@ public class MainActivity extends AppCompatActivity implements SearchItemClickLi
     @Override
     protected void onResume() {
         super.onResume();
-        allItems = FileUtils.getAllSavedItems(this); // Refresh on return
+        allItems = dbHelper.getAllSavedItems(this); // Refresh on return
         performSearch(searchEditText.getText().toString().trim().toLowerCase());
     }
-
 
     @Override
     public void onItemClick(SearchItem item) {
@@ -80,17 +82,6 @@ public class MainActivity extends AppCompatActivity implements SearchItemClickLi
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra("ITEM_ID", item.getId());
         startActivity(intent);
-    }
-
-    private void initSampleData() {
-        allItems.add(new SearchItem(1, "Hướng dẫn Android Studio", "Hướng dẫn cơ bản về sử dụng Android Studio"));
-        allItems.add(new SearchItem(2, "Lập trình Java căn bản", "Những kiến thức cơ bản về ngôn ngữ lập trình Java"));
-        allItems.add(new SearchItem(3, "Thiết kế giao diện Android", "Hướng dẫn thiết kế UI/UX cho ứng dụng Android"));
-        allItems.add(new SearchItem(4, "RecyclerView trong Android", "Cách sử dụng RecyclerView để hiển thị danh sách"));
-        allItems.add(new SearchItem(5, "SQLite Database", "Sử dụng SQLite để lưu trữ dữ liệu trong ứng dụng Android"));
-        allItems.add(new SearchItem(6, "Android Fragments", "Làm việc với Fragments trong ứng dụng Android"));
-        allItems.add(new SearchItem(7, "Networking trong Android", "Thực hiện các yêu cầu mạng với Retrofit và Volley"));
-        allItems.add(new SearchItem(8, "Xử lý sự kiện trong Android", "Cách xử lý các sự kiện người dùng trong Android"));
     }
 
     private void performSearch(final String searchTerm) {
@@ -116,6 +107,4 @@ public class MainActivity extends AppCompatActivity implements SearchItemClickLi
             progressBar.setVisibility(View.GONE);
         }, 300);
     }
-
-
 }

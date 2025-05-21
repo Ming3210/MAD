@@ -18,38 +18,36 @@ public class DetailActivity extends AppCompatActivity {
     private Button deleteButton;
     private SearchItem currentItem;
 
+    private SearchItemDatabaseHelper dbHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
 
-        // Enable back button in action bar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Chi tiết");
         }
 
-        // Initialize views
         titleTextView = findViewById(R.id.detailTitleTextView);
         descriptionTextView = findViewById(R.id.detailDescriptionTextView);
         idTextView = findViewById(R.id.detailIdTextView);
         saveButton = findViewById(R.id.saveButton);
         deleteButton = findViewById(R.id.deleteButton);
 
-        // Get item ID from intent
+        dbHelper = new SearchItemDatabaseHelper(this);
+
         int itemId = getIntent().getIntExtra("ITEM_ID", -1);
 
         if (itemId != -1) {
-            // First check if this item is already saved
-            SearchItem savedItem = FileUtils.loadItem(this, itemId);
+            SearchItem savedItem = dbHelper.getItemById(itemId);
 
             if (savedItem != null) {
-                // Item is already saved, load from file
                 currentItem = savedItem;
                 displayItemDetails(currentItem);
                 updateButtonStates(true);
             } else {
-                // Item is not saved, load from sample data
                 loadItemDetails(itemId);
                 updateButtonStates(false);
             }
@@ -58,29 +56,13 @@ public class DetailActivity extends AppCompatActivity {
             finish();
         }
 
-        // Set up button click listeners
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveCurrentItem();
-            }
-        });
+        saveButton.setOnClickListener(v -> saveCurrentItem());
 
-        deleteButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                deleteCurrentItem();
-            }
-        });
+        deleteButton.setOnClickListener(v -> deleteCurrentItem());
     }
 
     private void loadItemDetails(int itemId) {
-        // In a real app, you would fetch item details from a database or API
-        // For this example, we're creating dummy data
-        currentItem = null;
-
-        // This is where you would normally query your database
-        // For demonstration, we're creating a dummy item based on the ID
+        // Dữ liệu mẫu - có thể thay bằng API hoặc source khác
         switch (itemId) {
             case 1:
                 currentItem = new SearchItem(1, "Hướng dẫn Android Studio", "Hướng dẫn cơ bản về sử dụng Android Studio");
@@ -88,16 +70,12 @@ public class DetailActivity extends AppCompatActivity {
             case 2:
                 currentItem = new SearchItem(2, "Lập trình Java căn bản", "Những kiến thức cơ bản về ngôn ngữ lập trình Java");
                 break;
-            // Add more cases for other items
             default:
                 currentItem = new SearchItem(itemId, "Item #" + itemId, "Chi tiết về item #" + itemId);
                 break;
         }
 
-        // Display item details
-        if (currentItem != null) {
-            displayItemDetails(currentItem);
-        }
+        displayItemDetails(currentItem);
     }
 
     private void displayItemDetails(SearchItem item) {
@@ -107,23 +85,18 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void updateButtonStates(boolean isSaved) {
-        if (isSaved) {
-            saveButton.setEnabled(false);
-            saveButton.setText("Đã lưu");
-            deleteButton.setEnabled(true);
-        } else {
-            saveButton.setEnabled(true);
-            saveButton.setText("Lưu");
-            deleteButton.setEnabled(false);
-        }
+        saveButton.setEnabled(!isSaved);
+        saveButton.setText(isSaved ? "Đã lưu" : "Lưu");
+        deleteButton.setEnabled(isSaved);
     }
 
     private void saveCurrentItem() {
         if (currentItem != null) {
-            boolean success = FileUtils.saveItem(this, currentItem);
-            if (success) {
+            long resultId = dbHelper.insertItem(currentItem);
+            if (resultId != -1) {
                 Toast.makeText(this, "Đã lưu thành công", Toast.LENGTH_SHORT).show();
                 updateButtonStates(true);
+                currentItem = dbHelper.getItemById((int) resultId); // Lấy lại với ID thực tế nếu cần
             } else {
                 Toast.makeText(this, "Lưu thất bại", Toast.LENGTH_SHORT).show();
             }
@@ -132,8 +105,8 @@ public class DetailActivity extends AppCompatActivity {
 
     private void deleteCurrentItem() {
         if (currentItem != null) {
-            boolean success = FileUtils.deleteItem(this, currentItem.getId());
-            if (success) {
+            int rowsDeleted = dbHelper.deleteItem(currentItem.getId());
+            if (rowsDeleted > 0) {
                 Toast.makeText(this, "Đã xóa thành công", Toast.LENGTH_SHORT).show();
                 updateButtonStates(false);
             } else {
@@ -145,7 +118,6 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            // Handle the back button press
             onBackPressed();
             return true;
         }

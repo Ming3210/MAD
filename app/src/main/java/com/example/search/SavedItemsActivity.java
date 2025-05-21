@@ -24,7 +24,6 @@ public class SavedItemsActivity extends AppCompatActivity implements SearchItemC
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_saved_items);
 
-        // Enable back button in action bar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Các mục đã lưu");
@@ -43,13 +42,14 @@ public class SavedItemsActivity extends AppCompatActivity implements SearchItemC
     @Override
     protected void onResume() {
         super.onResume();
-        // Reload saved items when returning to this activity
         loadSavedItems();
     }
 
     private void loadSavedItems() {
         // Load all saved items
-        savedItems = FileUtils.getAllSavedItems(this);
+        SearchItemDatabaseHelper dbHelper = new SearchItemDatabaseHelper(this);
+        savedItems = dbHelper.getAllSavedItems();
+
 
         if (savedItems.isEmpty()) {
             recyclerView.setVisibility(View.GONE);
@@ -66,7 +66,6 @@ public class SavedItemsActivity extends AppCompatActivity implements SearchItemC
 
     @Override
     public void onItemClick(SearchItem item) {
-        // Open DetailActivity for the selected item
         Intent intent = new Intent(this, DetailActivity.class);
         intent.putExtra("ITEM_ID", item.getId());
         startActivity(intent);
@@ -75,7 +74,6 @@ public class SavedItemsActivity extends AppCompatActivity implements SearchItemC
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            // Handle the back button
             onBackPressed();
             return true;
         }
