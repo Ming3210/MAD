@@ -12,6 +12,7 @@
 
         android:theme="@style/Theme.Search">
         <activity android:name=".AddItemActivity" />
+        <activity android:name=".DetailActivity" />
 
         <activity
             android:name=".MainActivity"

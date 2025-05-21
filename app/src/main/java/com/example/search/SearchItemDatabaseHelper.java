@@ -67,6 +67,7 @@ public class SearchItemDatabaseHelper extends SQLiteOpenHelper {
         return itemList;
     }
 
+
     public static List<SearchItem> getAllSavedItems(Context context) {
         SearchItemDatabaseHelper dbHelper = new SearchItemDatabaseHelper(context);
         return dbHelper.getAllSavedItems();
